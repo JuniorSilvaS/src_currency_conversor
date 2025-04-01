@@ -1,6 +1,7 @@
 require('dotenv').config();
 const { neon } = require("@neondatabase/serverless");
 const bcrypt = require('bcrypt');
+const { constructFromObject } = require('cloudmersive-currency-api-client/src/ApiClient');
 const jwt = require('jsonwebtoken');
 
 
@@ -97,9 +98,40 @@ const profileUser = async (req, res) => {
     return res.status(201).json({ user });
 };
 
+const editProfile = async (req, res) => {
+    const { name, email, password, avatar } = req.body;
+    //taking the user id to make the change
+    const token = req.header('Authorization');
+    const id = jwt.verify(token, process.env.SECRET_JWT);
+    const iD = id.user[0].id;
+    
+    const oldUser = await sql`
+        SELECT * FROM users WHERE id = ${iD}
+    `;
+    console.log(oldUser);
+    const updateData = {
+        name : name || oldUser[0].name,
+        email: email ||  oldUser[0].email,
+        password: password || oldUser[0].password,
+        avatar : avatar || oldUser[0].avatar
+    };
+
+    try {
+        const newuser = await sql`
+            UPDATE users SET name = ${updateData.name}, email = ${updateData.email}, password = ${updateData.password},  avatar = ${updateData.avatar} WHERE id = ${iD} RETURNING *
+        `;
+        const newUser = newuser[0];
+        return res.status(201).json( newUser );
+    } catch (e) {
+        console.log(e);
+        return res.status(500).json({ msg: "Internal error server" });
+    };
+};
+
 module.exports = {
     version,
     createUser,
     loginUser,
-    profileUser
+    profileUser,
+    editProfile
 };

@@ -7,5 +7,6 @@ router.get('/database/version', userController.version);
 router.post('/createUser', userController.createUser);
 router.post('/login', userController.loginUser);
 router.get('/profile', jwtMiddlaware, userController.profileUser);
+router.put('/editProfile', jwtMiddlaware, userController.editProfile);
 
 module.exports = router;
