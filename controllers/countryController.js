@@ -3,15 +3,21 @@ const axios = require('axios');
 
 async function getAllContries(req, res) {
     try {
-        const response = await axios.get('https://restcountries.com/v3.1/independent?status=true');
-        const allDataContries = response.data;
-        const contries = allDataContries.map(contrie => {
+        const response = await axios.get(' https://restfulcountries.com/api/v1/countries',
+            {
+                headers: {
+                    Authorization: `Bearer ${process.env.API_COUNTRIES}`
+                }
+            }
+        );
+        const countries = response.data.data.map(countrie => {
             return {
-                name: contrie.name.common,
-                currencies: Object.keys(contrie.currencies)
+                name: countrie.iso3,
+                fullname : countrie.name,
+                currency: countrie.currency
             }
         });
-        return res.status(200).json({ contries });
+        return res.status(200).json({ countries });
     } catch (e) {
         console.log(e);
     }
@@ -19,18 +25,18 @@ async function getAllContries(req, res) {
 
 async function convertCurrencies(req, res) {
     const { currency, currencyToConvert, money = 1 } = req.body || {};
-    if(!currency) {
-        return res.status(401).json({ msg  : "currency is required" });
+    if (!currency) {
+        return res.status(401).json({ msg: "currency is required" });
     };
-    if(!currencyToConvert) {
-        return res.status(401).json({msg : "currencyToConvert is required"});
+    if (!currencyToConvert) {
+        return res.status(401).json({ msg: "currencyToConvert is required" });
     };
-    if(!money) {
-        return res.status(401).json({ msg : "money is required"});
+    if (!money) {
+        return res.status(401).json({ msg: "money is required" });
     };
 
-    try{
-        const apikey = process.env.API_KEY;
+    try {
+        const apikey = process.env.API_KEY_CONVERT;
         const response = await axios.get(`https://api.freecurrencyapi.com/v1/latest?base_currency=${currency}&currencies=${currencyToConvert}`, {
             headers: {
                 apikey: apikey
@@ -39,11 +45,11 @@ async function convertCurrencies(req, res) {
         const currencyValue = response.data.data[currencyToConvert];
         res.status(201).json(
             {
-                value : currencyValue * money
+                value: currencyValue * money
             }
         );
     }
-    catch(e) {
+    catch (e) {
         console.log(e);
     }
 };
