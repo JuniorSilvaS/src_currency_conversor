@@ -1,7 +1,6 @@
 require('dotenv').config();
 const { neon } = require("@neondatabase/serverless");
 const bcrypt = require('bcrypt');
-const { constructFromObject } = require('cloudmersive-currency-api-client/src/ApiClient');
 const jwt = require('jsonwebtoken');
 
 
@@ -84,7 +83,15 @@ const loginUser = async (req, res) => {
             user
         }, process.env.SECRET_JWT,
         );
-        return res.status(200).json({ token });
+
+        res.cookie('token', token, {
+            httpOnly: true,
+            secure: false,
+            sameSite: 'Strict',
+            maxAge: 15 * 60 * 1000
+        });
+
+        return res.status(201).json({ msg: ' login success' });
     }
     catch (e) {
         console.log(e);
@@ -93,27 +100,25 @@ const loginUser = async (req, res) => {
 };
 
 const profileUser = async (req, res) => {
-    const token = req.header('Authorization');
-    const user = jwt.verify(token, process.env.SECRET_JWT);
-    return res.status(201).json({ user });
+    return res.status(201).json({ user : req.user });
 };
 
 const editProfile = async (req, res) => {
     const { name, email, password, avatar } = req.body;
     //taking the user id to make the change
-    const token = req.header('Authorization');
+    const token = req.cookies.token;
     const id = jwt.verify(token, process.env.SECRET_JWT);
     const iD = id.user[0].id;
-    
+
     const oldUser = await sql`
         SELECT * FROM users WHERE id = ${iD}
     `;
     console.log(oldUser);
     const updateData = {
-        name : name || oldUser[0].name,
-        email: email ||  oldUser[0].email,
+        name: name || oldUser[0].name,
+        email: email || oldUser[0].email,
         password: password || oldUser[0].password,
-        avatar : avatar || oldUser[0].avatar
+        avatar: avatar || oldUser[0].avatar
     };
 
     try {
@@ -121,7 +126,7 @@ const editProfile = async (req, res) => {
             UPDATE users SET name = ${updateData.name}, email = ${updateData.email}, password = ${updateData.password},  avatar = ${updateData.avatar} WHERE id = ${iD} RETURNING *
         `;
         const newUser = newuser[0];
-        return res.status(201).json( newUser );
+        return res.status(201).json(newUser);
     } catch (e) {
         console.log(e);
         return res.status(500).json({ msg: "Internal error server" });
