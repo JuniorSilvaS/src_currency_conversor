@@ -13,7 +13,7 @@ async function getAllContries(req, res) {
         const countries = response.data.data.map(countrie => {
             return {
                 name: countrie.iso3,
-                fullname : countrie.name,
+                fullname: countrie.name,
                 currency: countrie.currency
             }
         });
@@ -54,7 +54,25 @@ async function convertCurrencies(req, res) {
     }
 };
 
+async function getAllCurrencies(req, res) {
+    try {
+        const response = await axios.get('https://api.freecurrencyapi.com/v1/currencies', {
+            headers: {
+                apikey: process.env.API_KEY_CONVERT
+            }
+        });
+        const currienciesObjects = response.data.data;
+        const currencies = Object.keys(currienciesObjects);
+
+        return res.status(200).json({ currencies });
+    } catch (e) {
+        console.log(e);
+        return res.status(400).json({ msg: "Internal error server!!!" });
+    };
+};
+
 module.exports = {
     getAllContries,
-    convertCurrencies
+    convertCurrencies,
+    getAllCurrencies
 };
