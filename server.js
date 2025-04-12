@@ -11,7 +11,7 @@ const cookieParser = require('cookie-parser');
 
 // Use middlewares
 app.use(cors({
-  origin: 'http://localhost:3000',
+  origin: 'https://currencyconversor-nine.vercel.app/',
   credentials: true
 }));
 app.use(express.json());
