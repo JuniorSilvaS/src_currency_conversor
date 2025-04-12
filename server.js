@@ -10,15 +10,11 @@ const userRoutes = require('./routes/userRoutes');
 const cookieParser = require('cookie-parser');
 
 // Use middlewares
-app.use(cors({
-  origin: 'https://client-coin-conversor.vercel.app/',
-  methods: ['GET', 'POST'],
-  credentials: true
-}));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-
+app.use(cors());
 // Use the country routes
 app.use('/api/countries', countryRoutes);
 app.use('/api/user', userRoutes);
